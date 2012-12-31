@@ -1,0 +1,28 @@
+<html>
+
+<head>
+	<script type="text/javascript" src="../lib/jquery-1.8.3.min.js"></script>
+	<script type="text/javascript" src="cropPlugin.js"></script>
+</head>
+
+<body>
+	<section>
+		<img id="source" src="cars.jpg" width="320" height="180" />
+	</section>
+	
+	<br/><br/>
+	
+	<section>
+		<div style="width:100px;height:100px;overflow:hidden">
+			<img id="preview" src="cars.jpg" width="320" height="180" 
+				 style="margin-left:-100px;margin-top:-100px"/>
+		</div>
+	<section>
+		
+	<script type="text/javascript">
+		$('#source').crop({'into' : $('#preview')});
+	</script>
+		
+</body>
+	
+</html>
