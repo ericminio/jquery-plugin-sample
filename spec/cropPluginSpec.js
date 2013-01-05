@@ -5,35 +5,29 @@ describe("Croper", function() {
 		$('body').append("<img id='source'>");
 		$('body').append("<img id='target'>");
 	});
+	
+	describe("Core", function() {
 
-	it("can translate the target", function() {
-		croper.init($('#source'), $('#target'));
-		croper.translate({x : 3, y : 2 });
+		it("translating the target sets its top and left margins", function() {
+			croper.init($('#source'), $('#target'));
+			croper.translateTarget({ x:3, y:2 });
 
-		expect($('#target').css('margin-left')).toEqual('3px');
-		expect($('#target').css('margin-top' )).toEqual('2px');
-	});
-	
-	it("can build a translation vector from a mouse event in the source", function() {
-		croper.init({ offset : function() { return {left:10, top:20}; },
-					  bind   : function() {} }, $('#target'));
-		var event = { pageX : 2, pageY : 3 };
-		
-		expect(croper.buildTranslationFromEvent(event)).toEqual({ x:8, y:17 });
-	});
-	
-	it("updates the target given the mouse event", function() {
-		croper.init({ offset : function() { return {left:10, top:20}; },
-					  bind   : function() {} }, $('#target'));
-		var event = { pageX : 2, pageY : 3 };
-		spyOn(croper, 'translate');
-		croper.update(event);
-		
-		expect(croper.translate).toHaveBeenCalledWith({ x:8, y:17 });
+			expect($('#target').css('margin')).toEqual('2px 0px 0px 3px');
+		});
+
+		it("builds a translation vector" + 
+		   ", from the event and the source's position in the page," +
+		   " to be used to translate the target", function() {
+			var source = { offset : function() { return { left:100,   top:20 }; }, bind : function() {} };
+			croper.init(source, $('#target'));
+						
+			expect(croper.buildTranslationFromEvent(   { pageX:102, pageY:23 })).
+												toEqual(   { x: -2,    y: -3 } );
+		});
 		
 	});
-	
-	describe("Plugin", function() {
+
+	describe("Plugin usage", function() {
 		it("initializes the croper with the source and the target", function() {
 			spyOn(croper, 'init').andCallThrough();
 			$('#source').crop({'into' : $('#target'), 'withCroper' : croper});
@@ -42,16 +36,16 @@ describe("Croper", function() {
 		});
 	});
 	
-	describe("initialization", function() {
+	describe("Initialization", function() {
 		
 		it("wedges target in the left top corner", function() {
-			spyOn(croper, 'translate').andCallThrough();
+			spyOn(croper, 'translateTarget').andCallThrough();
 			croper.init($('#source'), $('#target'));
 			
-			expect(croper.translate).toHaveBeenCalledWith({x : 0, y : 0 });
+			expect(croper.translateTarget).toHaveBeenCalledWith({ x:0, y:0 });
 		});
 		
-		it("binds a mousemove event to update the target", function() {
+		it("binds target update to mousemove events", function() {
 			var source = { bind : function() { } };
 			spyOn(source, 'bind' );
 			croper.init(source, $('#target'));
@@ -60,5 +54,28 @@ describe("Croper", function() {
 		});
 		
 	});
+			
+	describe("Mousemove listener", function() {
 		
+		it("builds the correct translation vector from the given event", function() {
+			croper.init($('#source'), $('#target'));
+			spyOn(croper, 'buildTranslationFromEvent').andCallThrough();
+			var event = jQuery.Event("mousemove");
+			$('#source').trigger( event );
+
+			expect(croper.buildTranslationFromEvent).toHaveBeenCalledWith(event);
+		});
+
+		it("translates the target with the translation vector built from the event", function() {
+			croper.init($('#source'), $('#target'));
+			var vector = { x:'any', y:'any' };
+			spyOn(croper, 'buildTranslationFromEvent').andReturn(vector);
+			spyOn(croper, 'translateTarget');
+			$('#source').trigger( jQuery.Event("mousemove") );
+
+			expect(croper.translateTarget).toHaveBeenCalledWith(vector);
+		});
+		
+	});
+	
 });
